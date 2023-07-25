@@ -1,6 +1,10 @@
 use std::process::Command;
 
-use crate::{config::Editor, types::Project};
+use crate::{
+    config::{Editor, RELATIVE_CONFIG_DIR},
+    helpers::system_home,
+    types::Project,
+};
 
 use itertools::Itertools;
 
@@ -14,6 +18,7 @@ Usage:
     pro remove <PROJECT_NAME> -> Remove project
     pro open <PROJECT_NAME>   -> Open project in vscode
     pro help                  -> Display this message
+    pro config                -> Open config file in editor
     pro server start          -> Start web ui"#
     );
 }
@@ -33,6 +38,24 @@ pub fn list(projects: Vec<Project>) {
 
 fn find_project(projects: Vec<Project>, project_name: &str) -> Option<Project> {
     projects.into_iter().find(|p| p.name == project_name)
+}
+
+pub fn open_config(editor: Editor) -> Result<(), String> {
+    let editor_cmd = &mut Command::new(editor.command);
+    let home = system_home().ok_or("Can't get home dir")?;
+    editor_cmd
+        .current_dir(home + RELATIVE_CONFIG_DIR)
+        .arg("config.ron");
+
+    for flag in editor.flags {
+        editor_cmd.arg(flag);
+    }
+
+    editor_cmd
+        .output()
+        .map_err(|e| format!("Can't start editor beacuse of {e}"))?;
+
+    Ok(())
 }
 
 pub fn open(projects: Vec<Project>, project_name: &str, editor: Editor) -> Result<(), String> {

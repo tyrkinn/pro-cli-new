@@ -29,6 +29,7 @@ fn main() -> Result<(), ()> {
     match str_args[..] {
         ["help"] => commands::help(),
         ["list"] => commands::list(projects),
+        ["config"] => commands::open_config(pro_config.editor).map_err(|e| eprintln!("{e}"))?,
         ["open", pr_name] => {
             commands::open(projects, pr_name, pro_config.editor).map_err(|e| eprintln!("{e}"))?
         }
