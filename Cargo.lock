@@ -337,7 +337,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pro-cli-new"
+name = "pro"
 version = "0.1.0"
 dependencies = [
  "config",

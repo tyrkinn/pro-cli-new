@@ -1,5 +1,5 @@
 [package]
-name = "pro-cli-new"
+name = "pro"
 version = "0.1.0"
 edition = "2021"
 

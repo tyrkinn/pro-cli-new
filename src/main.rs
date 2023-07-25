@@ -27,6 +27,7 @@ fn main() -> Result<(), ()> {
     let str_args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     match str_args[..] {
+        ["help"] => commands::help(),
         ["list"] => commands::list(projects),
         ["open", pr_name] => {
             commands::open(projects, pr_name, pro_config.editor).map_err(|e| eprintln!("{e}"))?
