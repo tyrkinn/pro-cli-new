@@ -1,0 +1,25 @@
+<div class="column is-3">
+    <div class="card">
+    <header class="card-header">
+        <p class="card-header-title">
+            {{project.name}}
+        </p>
+        <button class="card-header-icon" aria-label="more options">
+        <span>
+          {{project.project_path.label}}
+        </span>
+        </button>
+    </header>
+    <div class="card-content">
+        <div class="content">
+          No description provided
+        <br>
+        </div>
+    </div>
+    <footer class="card-footer">
+        <button class="card-footer-item button is-ghost" hx-swap="none" hx-get="/open?project={{project.name}}">Open</a>
+        <button class="card-footer-item button is-ghost">Edit</a>
+        <button class="card-footer-item button is-ghost">Delete</a>
+    </footer>
+    </div>
+</div>

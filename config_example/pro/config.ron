@@ -1,0 +1,16 @@
+ProConfig (
+  projects_paths: [
+    ProjectPath (
+      label: "Main Dir",
+      path: "/github/tyrkinn/",
+    ),
+    ProjectPath (
+      label: "Golang Dir",
+      path: "/go/src/github.com/tyrkinn/",
+    )
+  ],
+  editor: Editor(
+    command: "neovide",
+    flags: []
+  )
+)

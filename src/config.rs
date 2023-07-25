@@ -11,11 +11,16 @@ pub struct ProjectPath {
     pub path: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Editor {
+    pub command: String,
+    pub flags: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProConfig {
     pub projects_paths: Vec<ProjectPath>,
-    pub editor: String,
-    pub editor_flags: Vec<String>,
+    pub editor: Editor,
 }
 
 impl ProConfig {

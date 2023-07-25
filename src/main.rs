@@ -28,13 +28,9 @@ fn main() -> Result<(), ()> {
 
     match str_args[..] {
         ["list"] => commands::list(projects),
-        ["open", pr_name] => commands::open(
-            projects,
-            pr_name,
-            &pro_config.editor,
-            pro_config.editor_flags,
-        )
-        .map_err(|e| eprintln!("{e}"))?,
+        ["open", pr_name] => {
+            commands::open(projects, pr_name, pro_config.editor).map_err(|e| eprintln!("{e}"))?
+        }
         ["path", pr_name] => {
             let path = commands::path(projects, pr_name)
                 .map_err(|e| eprintln!("Can't get project path beacuse of {e}"))?;
@@ -58,7 +54,7 @@ fn main() -> Result<(), ()> {
             })
         }
         ["server", "start"] => {
-            start_server(projects)?;
+            start_server(projects, pro_config.editor)?;
         }
         _ => println!("Run `pro help` to get usage info"),
     }

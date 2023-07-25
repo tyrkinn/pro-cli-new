@@ -2,11 +2,14 @@ use std::fs;
 
 use handlebars::{Handlebars, TemplateError};
 
-use tiny_http::Server;
+use tiny_http::{Method, Server};
 use url::Url;
 
 use crate::{
-    config::RELATIVE_CONFIG_DIR, helpers::system_home, types::Project, web_server::handlers,
+    config::{Editor, RELATIVE_CONFIG_DIR},
+    helpers::system_home,
+    types::Project,
+    web_server::handlers::{self, open_handler},
 };
 
 fn template_path(template_name: &str) -> String {
@@ -25,7 +28,7 @@ fn prepare_handlebars<'a>() -> Result<Handlebars<'a>, TemplateError> {
     Ok(hbs)
 }
 
-pub fn start_server(projects: Vec<Project>) -> Result<(), ()> {
+pub fn start_server(projects: Vec<Project>, editor: Editor) -> Result<(), ()> {
     let url = "0.0.0.0:8000";
     let base_url =
         Url::parse(&format!("http://{url}")).map_err(|_| eprintln!("Can't parse url"))?;
@@ -37,6 +40,12 @@ pub fn start_server(projects: Vec<Project>) -> Result<(), ()> {
         let endpoint = request.url();
         match endpoint {
             "/" => handlers::root_handler(request, &hbs, &projects)?,
+            x if x.starts_with("/open") && *request.method() == Method::Get => {
+                let full_url = format!("{base_url}{x}");
+
+                open_handler(request, &projects, &full_url, editor.clone())?
+            }
+
             _ => {}
         }
     }

@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use crate::types::Project;
+use crate::{config::Editor, types::Project};
 
 use itertools::Itertools;
 
@@ -35,21 +35,16 @@ fn find_project(projects: Vec<Project>, project_name: &str) -> Option<Project> {
     projects.into_iter().find(|p| p.name == project_name)
 }
 
-pub fn open(
-    projects: Vec<Project>,
-    project_name: &str,
-    editor: &str,
-    editor_flags: Vec<String>,
-) -> Result<(), String> {
+pub fn open(projects: Vec<Project>, project_name: &str, editor: Editor) -> Result<(), String> {
     let selected_project = find_project(projects, project_name)
         .ok_or("Can't find project with this name".to_string())?;
 
     let project_path = &selected_project.full_path;
 
-    let editor_cmd = &mut Command::new(editor);
+    let editor_cmd = &mut Command::new(editor.command);
     editor_cmd.current_dir(project_path).arg(project_path);
 
-    for flag in editor_flags {
+    for flag in editor.flags {
         editor_cmd.arg(flag);
     }
 
