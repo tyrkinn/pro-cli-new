@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use crate::{
-    config::{Editor, RELATIVE_CONFIG_DIR},
+    config::{Editor, ProjectPath, RELATIVE_CONFIG_DIR},
     helpers::system_home,
     types::Project,
 };
@@ -18,6 +18,7 @@ Usage:
     pro remove <PROJECT_NAME> -> Remove project
     pro open <PROJECT_NAME>   -> Open project in vscode
     pro help                  -> Display this message
+    pro comps                 -> Generate zsh comps
     pro config                -> Open config file in editor
     pro server start          -> Start web ui"#
     );
@@ -89,5 +90,47 @@ pub fn remove_project(projects: Vec<Project>, project_name: &str) -> Result<Stri
     let path = path(projects, project_name)?;
     std::fs::remove_dir_all(path).map_err(|e| format!("Can't remove directory because of {e}"))?;
 
-    Ok("Successfully removed {project_name} project".to_string())
+    Ok(format!("Successfully removed {project_name} project"))
+}
+
+pub fn gen_comps(project_dirs: Vec<ProjectPath>) {
+    let dirs_str = project_dirs
+        .iter()
+        .map(|p| "~".to_string() + &p.path.clone())
+        .join(" ");
+    let comp = format!(
+        r#"
+_pro() {{
+    local line state
+
+    _arguments -C \
+               "1: :->cmds" \
+               "*::arg:->args"
+    case "$state" in
+        cmds)
+            _values "pro command" \
+                    "list[list all projects in project directories]" \
+                    "open[open project in editor]" \
+                    "remove[remove project dir]"  \
+                    "path[get full project path]" \
+                    "help[display help message]" \
+            ;;
+        args)
+            case $line[1] in
+                path | remove | open)
+                    _select_project_cmd
+                    ;;
+            esac
+            ;;
+    esac
+}}
+_select_project_cmd() {{
+     local oomph_dirs oomph_dirs=(-/ {dirs_str})
+     _files -W oomph_dirs -g '*'
+}}
+compdef _pro pro
+"#
+    );
+
+    println!("{comp}")
 }

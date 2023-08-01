@@ -20,6 +20,7 @@ fn main() -> Result<(), ()> {
     let pro_config =
         ProConfig::init().map_err(|err| eprintln!("Can't initialize config because of {err}"))?;
 
+    let config_clone = pro_config.clone();
     let projects = read_paths(&home, pro_config.projects_paths);
 
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -29,6 +30,7 @@ fn main() -> Result<(), ()> {
     match str_args[..] {
         ["help"] => commands::help(),
         ["list"] => commands::list(projects),
+        ["comps"] => commands::gen_comps(config_clone.projects_paths),
         ["config"] => commands::open_config(pro_config.editor).map_err(|e| eprintln!("{e}"))?,
         ["open", pr_name] => {
             commands::open(projects, pr_name, pro_config.editor).map_err(|e| eprintln!("{e}"))?
