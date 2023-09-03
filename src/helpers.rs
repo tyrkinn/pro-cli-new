@@ -10,7 +10,7 @@ fn read_dir(full_path: &str) -> io::Result<Vec<DirEntry>> {
     Ok(std::fs::read_dir(full_path)?.flatten().collect())
 }
 
-pub fn read_paths(home_dir: &str, dir_paths: &Vec<ProjectPath>) -> Vec<Project> {
+pub fn read_paths(home_dir: &str, dir_paths: &[ProjectPath]) -> Vec<Project> {
     dir_paths
         .iter()
         .flat_map(|p| {
