@@ -1,4 +1,4 @@
-<div class="column is-3">
+<div class="column is-3 project">
     <div class="card">
     <header class="card-header">
         <p class="card-header-title">
@@ -19,7 +19,7 @@
     <footer class="card-footer">
         <button class="card-footer-item button is-ghost" hx-swap="none" hx-get="/open?project={{project.name}}">Open</a>
         <button class="card-footer-item button is-ghost">Edit</a>
-        <button class="card-footer-item button is-ghost">Delete</a>
+        <button class="card-footer-item button is-ghost" hx-target="closest .project" hx-swap="delete" hx-delete="/delete?project={{project.name}}" hx-confirm="Are you sure you want to delete `{{project.name}}` project">Delete</a>
     </footer>
     </div>
 </div>
