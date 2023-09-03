@@ -6,10 +6,10 @@ use tiny_http::{Method, Server};
 use url::Url;
 
 use crate::{
-    config::{Editor, RELATIVE_CONFIG_DIR},
+    config::RELATIVE_CONFIG_DIR,
+    context::ProContext,
     helpers::system_home,
-    types::Project,
-    web_server::handlers::{self, open_handler},
+    web_server::handlers::{self, delete_handler, open_handler},
 };
 
 fn template_path(template_name: &str) -> String {
@@ -28,7 +28,7 @@ fn prepare_handlebars<'a>() -> Result<Handlebars<'a>, TemplateError> {
     Ok(hbs)
 }
 
-pub fn start_server(projects: Vec<Project>, editor: Editor) -> Result<(), ()> {
+pub fn start_server(context: &mut ProContext) -> Result<(), ()> {
     let url = "0.0.0.0:8000";
     let base_url =
         Url::parse(&format!("http://{url}")).map_err(|_| eprintln!("Can't parse url"))?;
@@ -39,13 +39,16 @@ pub fn start_server(projects: Vec<Project>, editor: Editor) -> Result<(), ()> {
     for request in server.incoming_requests() {
         let endpoint = request.url();
         match endpoint {
-            "/" => handlers::root_handler(request, &hbs, &projects)?,
+            "/" => handlers::root_handler(context, request, &hbs)?,
             x if x.starts_with("/open") && *request.method() == Method::Get => {
                 let full_url = format!("{base_url}{x}");
 
-                open_handler(request, &projects, &full_url, editor.clone())?
+                open_handler(context, request, &full_url)?
             }
-
+            x if x.starts_with("/delete") && *request.method() == Method::Delete => {
+                let full_url = format!("{base_url}{x}");
+                delete_handler(context, request, &full_url)?
+            }
             _ => {}
         }
     }

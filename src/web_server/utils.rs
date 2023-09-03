@@ -5,11 +5,11 @@ use url::{ParseError, Url};
 
 use crate::{config::RELATIVE_CONFIG_DIR, helpers::system_home};
 
-pub const REQUIRED_TEMPLATES: &'static [&'static str] = &["project.hbs", "index.hbs"];
+pub const REQUIRED_TEMPLATES: &[&str] = &["project.hbs", "index.hbs"];
 
 pub fn ensure_templates(templates_path: &str) -> bool {
     let home_path = system_home().unwrap();
-    REQUIRED_TEMPLATES.into_iter().all(|template| {
+    REQUIRED_TEMPLATES.iter().all(|template| {
         path_exists(&format!(
             "{home_path}{RELATIVE_CONFIG_DIR}{templates_path}{template}"
         ))

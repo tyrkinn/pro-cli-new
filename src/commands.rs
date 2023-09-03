@@ -1,9 +1,7 @@
 use std::process::Command;
 
 use crate::{
-    config::{Editor, ProjectPath, RELATIVE_CONFIG_DIR},
-    helpers::system_home,
-    types::Project,
+    config::RELATIVE_CONFIG_DIR, context::ProContext, helpers::system_home, types::Project,
 };
 
 use itertools::Itertools;
@@ -24,8 +22,12 @@ Usage:
     );
 }
 
-pub fn list(projects: Vec<Project>) {
-    let groups = projects.into_iter().group_by(|p| p.project_path.to_owned());
+pub fn list(context: &ProContext) {
+    let groups = context
+        .projects
+        .clone()
+        .into_iter()
+        .group_by(|p| p.project_path.to_owned());
     for group in groups.into_iter() {
         let (k, values) = group;
 
@@ -37,18 +39,22 @@ pub fn list(projects: Vec<Project>) {
     }
 }
 
-fn find_project(projects: Vec<Project>, project_name: &str) -> Option<Project> {
-    projects.into_iter().find(|p| p.name == project_name)
+fn find_project(context: &ProContext, project_name: &str) -> Option<Project> {
+    context
+        .projects
+        .clone()
+        .into_iter()
+        .find(|p| p.name == project_name)
 }
 
-pub fn open_config(editor: Editor) -> Result<(), String> {
-    let editor_cmd = &mut Command::new(editor.command);
+pub fn open_config(context: &ProContext) -> Result<(), String> {
+    let editor_cmd = &mut Command::new(&context.config.editor.command);
     let home = system_home().ok_or("Can't get home dir")?;
     editor_cmd
         .current_dir(home + RELATIVE_CONFIG_DIR)
         .arg("config.ron");
 
-    for flag in editor.flags {
+    for flag in &context.config.editor.flags {
         editor_cmd.arg(flag);
     }
 
@@ -59,16 +65,16 @@ pub fn open_config(editor: Editor) -> Result<(), String> {
     Ok(())
 }
 
-pub fn open(projects: Vec<Project>, project_name: &str, editor: Editor) -> Result<(), String> {
-    let selected_project = find_project(projects, project_name)
+pub fn open(context: &ProContext, project_name: &str) -> Result<(), String> {
+    let selected_project = find_project(context, project_name)
         .ok_or("Can't find project with this name".to_string())?;
 
     let project_path = &selected_project.full_path;
 
-    let editor_cmd = &mut Command::new(editor.command);
+    let editor_cmd = &mut Command::new(&context.config.editor.command);
     editor_cmd.current_dir(project_path).arg(project_path);
 
-    for flag in editor.flags {
+    for flag in &context.config.editor.flags {
         editor_cmd.arg(flag);
     }
 
@@ -79,22 +85,24 @@ pub fn open(projects: Vec<Project>, project_name: &str, editor: Editor) -> Resul
     Ok(())
 }
 
-pub fn path(projects: Vec<Project>, project_name: &str) -> Result<String, String> {
+pub fn path(context: &ProContext, project_name: &str) -> Result<String, String> {
     let selected_project =
-        find_project(projects, project_name).ok_or("Can't find project".to_string())?;
+        find_project(context, project_name).ok_or("Can't find project".to_string())?;
 
     Ok(selected_project.full_path)
 }
 
-pub fn remove_project(projects: Vec<Project>, project_name: &str) -> Result<String, String> {
-    let path = path(projects, project_name)?;
+pub fn remove_project(context: &ProContext, project_name: &str) -> Result<String, String> {
+    let path = path(context, project_name)?;
     std::fs::remove_dir_all(path).map_err(|e| format!("Can't remove directory because of {e}"))?;
 
     Ok(format!("Successfully removed {project_name} project"))
 }
 
-pub fn gen_comps(project_dirs: Vec<ProjectPath>) {
-    let dirs_str = project_dirs
+pub fn gen_comps(context: &ProContext) {
+    let dirs_str = context
+        .config
+        .projects_paths
         .iter()
         .map(|p| "~".to_string() + &p.path.clone())
         .join(" ");

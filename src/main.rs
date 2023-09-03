@@ -1,12 +1,14 @@
 pub mod commands;
 pub mod config;
+pub mod context;
 pub mod helpers;
 pub mod types;
 pub mod web_server;
 
 use std::fs;
 
-use helpers::{read_paths, system_home};
+use context::ProContext;
+use helpers::system_home;
 use web_server::{
     server::start_server,
     utils::{path_exists, REQUIRED_TEMPLATES},
@@ -19,9 +21,7 @@ fn main() -> Result<(), ()> {
 
     let pro_config =
         ProConfig::init().map_err(|err| eprintln!("Can't initialize config because of {err}"))?;
-
-    let config_clone = pro_config.clone();
-    let projects = read_paths(&home, pro_config.projects_paths);
+    let mut context = ProContext::new(pro_config);
 
     let args: Vec<String> = std::env::args().skip(1).collect();
 
@@ -29,20 +29,18 @@ fn main() -> Result<(), ()> {
 
     match str_args[..] {
         ["help"] => commands::help(),
-        ["list"] => commands::list(projects),
-        ["comps"] => commands::gen_comps(config_clone.projects_paths),
-        ["config"] => commands::open_config(pro_config.editor).map_err(|e| eprintln!("{e}"))?,
-        ["open", pr_name] => {
-            commands::open(projects, pr_name, pro_config.editor).map_err(|e| eprintln!("{e}"))?
-        }
+        ["list"] => commands::list(&context),
+        ["comps"] => commands::gen_comps(&context),
+        ["config"] => commands::open_config(&context).map_err(|e| eprintln!("{e}"))?,
+        ["open", pr_name] => commands::open(&context, pr_name).map_err(|e| eprintln!("{e}"))?,
         ["path", pr_name] => {
-            let path = commands::path(projects, pr_name)
+            let path = commands::path(&context, pr_name)
                 .map_err(|e| eprintln!("Can't get project path beacuse of {e}"))?;
             println!("{path}");
         }
         ["remove", pr_name] => {
             let message =
-                commands::remove_project(projects, pr_name).map_err(|e| eprintln!("{e}"))?;
+                commands::remove_project(&context, pr_name).map_err(|e| eprintln!("{e}"))?;
             println!("{message}");
         }
         ["server", "install-templates"] => {
@@ -51,14 +49,14 @@ fn main() -> Result<(), ()> {
                 fs::create_dir_all(&templates_path)
                     .map_err(|e| eprintln!("Can't create templates dir because of {e}"))?;
             }
-            REQUIRED_TEMPLATES.into_iter().for_each(|&template_file| {
+            REQUIRED_TEMPLATES.iter().for_each(|&template_file| {
                 fs::File::create(templates_path.clone() + template_file)
                     .map_err(|e| eprintln!("Can't create file because of {e}"))
                     .unwrap();
             })
         }
         ["server", "start"] => {
-            start_server(projects, pro_config.editor)?;
+            start_server(&mut context)?;
         }
         _ => println!("Run `pro help` to get usage info"),
     }
