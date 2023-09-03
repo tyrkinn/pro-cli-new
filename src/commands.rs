@@ -23,33 +23,30 @@ Usage:
 }
 
 pub fn list(context: &ProContext) {
-    let groups = context
+    context
         .projects
-        .clone()
+        .iter()
+        .group_by(|p| p.project_path.to_owned())
         .into_iter()
-        .group_by(|p| p.project_path.to_owned());
-    for group in groups.into_iter() {
-        let (k, values) = group;
-
-        println!("{}", k.label);
-        values.for_each(|p| {
-            println!("{:>7}{}", "", p.name);
+        .for_each(|(k, values)| {
+            println!("{}", k.label);
+            values.for_each(|p| println!("{:>7}{}", "", p.name));
+            println!();
         });
-        println!();
-    }
 }
 
 fn find_project(context: &ProContext, project_name: &str) -> Option<Project> {
     context
         .projects
-        .clone()
-        .into_iter()
+        .iter()
         .find(|p| p.name == project_name)
+        .cloned()
 }
 
 pub fn open_config(context: &ProContext) -> Result<(), String> {
     let editor_cmd = &mut Command::new(&context.config.editor.command);
     let home = system_home().ok_or("Can't get home dir")?;
+
     editor_cmd
         .current_dir(home + RELATIVE_CONFIG_DIR)
         .arg("config.ron");
@@ -104,7 +101,7 @@ pub fn gen_comps(context: &ProContext) {
         .config
         .projects_paths
         .iter()
-        .map(|p| "~".to_string() + &p.path.clone())
+        .map(|p| "~".to_string() + &p.path.to_string())
         .join(" ");
     let comp = format!(
         r#"
